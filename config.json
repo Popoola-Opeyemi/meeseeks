@@ -1,0 +1,22 @@
+{
+  "commands": {
+    "concurrent": false,
+    "list": [
+      {
+        "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-admin",
+        "concurrent": false,
+        "list": [{ "cmd": "npm run build -- --spa"}]
+      },
+      {
+        "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-portal",
+        "concurrent": false,
+         "list": [{ "cmd": "npm run build -- --spa"}]
+      },
+      {
+        "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-server",
+        "concurrent": false,
+         "list": [{ "cmd": "npm run build"}]
+      }
+    ]
+  }
+}
