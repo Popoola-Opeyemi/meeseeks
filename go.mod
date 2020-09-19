@@ -1,4 +1,4 @@
-module automator
+module github.com/Popoola-Opeyemi/meeseeks
 
 go 1.15
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"automator/util"
+	"github.com/Popoola-Opeyemi/meeseeks/util"
 )
 
 func main() {
