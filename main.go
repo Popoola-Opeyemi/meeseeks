@@ -1,11 +1,19 @@
 package main
 
 import (
-	"github.com/Popoola-Opeyemi/meeseeks/util"
+	"os"
+
+	"github.com/Popoola-Opeyemi/meeseeks/core"
 )
 
 func main() {
-	logger := util.InitLogger().Sugar()
-	defer logger.Sync()
-	logger.Debugf("%s", util.IsLinux())
+
+	instance, err := core.InitApplication()
+
+	if err != nil {
+		os.Exit(1)
+	}
+
+	instance.StartHandler()
+
 }

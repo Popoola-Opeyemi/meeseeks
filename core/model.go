@@ -1,8 +1,16 @@
 package core
 
+type CommandOut struct {
+	StdOutput []byte
+	StdError  []byte
+}
+
+type Commands struct {
+	Commands JsonFile `json:"commands"`
+}
+
 // JsonFile represents the structure of the json file...
 type JsonFile struct {
-	Commands   string      `json:"commands"`
 	Concurrent bool        `json:"concurrent"`
 	List       []JsonInner `json:"list"`
 }
