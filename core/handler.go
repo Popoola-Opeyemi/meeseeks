@@ -15,16 +15,22 @@ func (h HandlerObjects) Concurrent() {
 	c := h.Config
 	l := h.Logger
 
+	// if operation is to be ran concurrently
 	if c.Concurrent {
 		for _, list := range c.List {
-			wg.Add(1)
-			go startConcurrent(list.CMD, c.Directory, l)
+			if list.CMD != "" {
+				wg.Add(1)
+				go startConcurrent(list.CMD, c.Directory, l)
+			}
 		}
 	}
 
+	// if operation is to be ran synchronously
 	if !c.Concurrent {
 		for _, list := range c.List {
-			startSynchronous(list.CMD, c.Directory, l)
+			if list.CMD != "" {
+				startSynchronous(list.CMD, c.Directory, l)
+			}
 		}
 	}
 }
@@ -34,34 +40,55 @@ func (h HandlerObjects) Sync() {
 	c := h.Config
 	l := h.Logger
 
+	// if operation is to be ran concurrently
 	if c.Concurrent {
+
 		for _, list := range c.List {
 
-			// adds to concurrent list
-			wg.Add(1)
+			// ensuring cmd is not empty
+			if list.CMD != "" {
 
-			// startup the run command
-			go startConcurrent(list.CMD, c.Directory, l)
+				// adds to waitgroup counter
+				wg.Add(1)
+
+				// startup the run command
+				go startConcurrent(list.CMD, c.Directory, l)
+
+			}
 		}
+		// ensuring the main thread waits until the goroutine has finished
 		wg.Wait()
 
 	}
 
 	if !c.Concurrent {
 		for _, list := range c.List {
-			startSynchronous(list.CMD, c.Directory, l)
+
+			// ensuring cmd is not empty
+			if list.CMD != "" {
+
+				// calling startSynchronous handler
+				startSynchronous(list.CMD, c.Directory, l)
+			}
 		}
 	}
 }
 
 func startConcurrent(command string, directory string, logger *zap.SugaredLogger) {
+
+	// ensuring the wait group sends done once function finished
 	defer wg.Done()
 
+	// creating a channel
 	resChan := make(chan OperationStatus)
 
+	// starting go routine to handle running command
 	go RunCommand(command, directory, logger, resChan)
+
+	// sending result to channel
 	result := <-resChan
 
+	// checking the result returned on channel
 	switch result.Status {
 
 	case Failed:
@@ -77,6 +104,7 @@ func startConcurrent(command string, directory string, logger *zap.SugaredLogger
 
 }
 
+// starts an asynchronous handler to run the command
 func startSynchronous(command string, directory string, logger *zap.SugaredLogger) {
 
 	result := RunCommandSync(command, directory, logger)
@@ -119,7 +147,8 @@ func (i *Instance) StartHandler() {
 			wg.Add(1)
 
 			h = HandlerObjects{Logger: logger, Config: cmd}
-			// calls the function to run task concurrently
+
+			// calls the concurrent method
 			go h.Concurrent()
 		}
 
@@ -134,6 +163,7 @@ func (i *Instance) StartHandler() {
 		for _, cmd := range cmdList {
 
 			h = HandlerObjects{Logger: logger, Config: cmd}
+			// calls sync method
 			h.Sync()
 		}
 	}

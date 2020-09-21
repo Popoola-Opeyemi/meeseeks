@@ -1,6 +1,7 @@
 package core
 
 import (
+	"os"
 	"runtime"
 	"time"
 
@@ -24,31 +25,55 @@ type Instance struct {
 	OperatingSystem string
 }
 
+// OperationStatus ...
 type OperationStatus struct {
 	Status   int
 	Result   execute.ExecResult
 	Duration time.Duration
 }
 
-// InitInstance ...
+// InitApplication starts the application by initializing the config and logger ...
 func InitApplication() (i Instance, e error) {
 
+	// starting logger
 	logger := util.InitLogger().Sugar()
+
+	// ensures logger closes when done
+	defer logger.Sync()
 
 	i.Logger = logger
 
 	i.OperatingSystem = runtime.GOOS
 
-	config, err := ReadSettings(settingFN)
+	logger.Info("Starting Application")
+
+	logger.Info("Reading Config File ...")
+
+	// checking to ensure file exists
+	fExist := FileExist(settingFN)
+
+	// if file does not exist attempt to create it
+	if !fExist {
+		logger.Infof("Cannot Find %s , creating %s \n", settingFN, settingFN)
+
+		err := CreateConfig(settingFN)
+
+		if err != nil {
+			logger.Info("Cannot create file exiting ... \n")
+			os.Exit(1)
+		}
+	}
+
+	config, err := ReadConfig(settingFN)
 
 	if err != nil {
-		logger.Debug("an error ocurred", err)
-		return i, e
+		logger.Info("[Exiting !] cannot find Config file \n")
+		os.Exit(1)
 	}
 
 	i.Config = config
 
-	return i, e
+	return
 
 }
 
@@ -56,7 +81,7 @@ func InitApplication() (i Instance, e error) {
 func RunCommand(command string, directory string, logger *zap.SugaredLogger, result chan OperationStatus) {
 	start := time.Now()
 
-	logger.Debugf("running command %s", command)
+	logger.Infof("running command %s", command)
 
 	cmd := execute.ExecTask{
 		Command: command,
@@ -68,30 +93,31 @@ func RunCommand(command string, directory string, logger *zap.SugaredLogger, res
 	end := time.Since(start)
 
 	if err != nil {
+		// initializing and populating OperationStatus struct
 		s := OperationStatus{Status: Error, Result: res, Duration: end}
 		result <- s
-		return
 	}
 
 	if res.ExitCode != 0 {
 		s := OperationStatus{Status: Failed, Result: res, Duration: end}
+		// sending s to result channel
 		result <- s
-		return
 	}
 
 	if res.ExitCode == 0 {
 		s := OperationStatus{Status: Success, Result: res, Duration: end}
 		result <- s
-
 	}
 
 }
 
-// RunCommand runs command using the passed function parameters
+// RunCommandSync runs command synchronously ...
 func RunCommandSync(command string, directory string, logger *zap.SugaredLogger) (result OperationStatus) {
+
+	// get current time to track execution of task
 	start := time.Now()
 
-	logger.Debugf("[running cmd]  %s \n", command)
+	logger.Infof("[running cmd]  %s \n", command)
 
 	cmd := execute.ExecTask{
 		Command: command,
@@ -99,6 +125,8 @@ func RunCommandSync(command string, directory string, logger *zap.SugaredLogger)
 	}
 
 	res, err := cmd.Execute()
+
+	// get time elapsed time between start and end
 	end := time.Since(start)
 
 	if err != nil {
@@ -122,6 +150,6 @@ func RunCommandSync(command string, directory string, logger *zap.SugaredLogger)
 		return
 	}
 
-	return result
+	return
 
 }
