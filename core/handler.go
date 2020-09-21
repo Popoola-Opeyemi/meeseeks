@@ -1,11 +1,13 @@
 package core
 
 import (
-	"os/exec"
 	"sync"
+
+	execute "github.com/alexellis/go-execute/pkg/v1"
+	"go.uber.org/zap"
 )
 
-func (i *Instance) handleConcurrent() {
+func (i *Instance) handleConcurrent(status chan int) {
 	var wg sync.WaitGroup
 
 	// getting logger the pointer
@@ -15,70 +17,68 @@ func (i *Instance) handleConcurrent() {
 
 	// looping through each of the list and for selected commands
 	for idx, cmd := range cmdList {
+
 		wg.Add(idx)
+
+		// concurrent handler
 		if cmd.Concurrent {
-			go runConcurrentCommand(cmd.List)
+
+			for i, list := range cmd.List {
+				_ = i
+				go runCommand(list.CMD, cmd.Directory, logger)
+			}
+
 		}
 
-		runCommand(cmd.List)
+		if !cmd.Concurrent {
+			for i, list := range cmd.List {
+				_ = i
+				runCommand(list.CMD, cmd.Directory, logger)
+			}
+		}
+
+	}
+}
+
+func runCommand(command string, directory string, logger *zap.SugaredLogger) (int, execute.ExecResult, error) {
+
+	logger.Debug("running command %s", command)
+
+	cmd := execute.ExecTask{
+		Command: command,
+		Cwd:     directory,
 	}
 
-	_ = logger
-
-}
-
-func runCommand([]ListItems) {
-
-}
-
-func runConcurrentCommand([]ListItems) {
-
-}
-
-func runCmd(cmd string) (CommandOut, error) {
-
-	output := CommandOut{}
-
-	cmdRunner := exec.Command(cmd)
-
-	stdout, err := cmdRunner.Output()
+	res, err := cmd.Execute()
 
 	if err != nil {
-		return output, err
+		return Failed, res, err
+
 	}
 
-	output.StdOutput = stdout
-
-	stderr, err := cmdRunner.CombinedOutput()
-
-	if err != nil {
-		return output, err
+	if res.ExitCode != 0 {
+		return Failed, res, nil
 	}
 
-	output.StdError = stderr
-
-	return output, nil
-
+	return Success, res, nil
 }
 
 // Handler ...
 func (i *Instance) StartHandler() {
 
-	var wg sync.WaitGroup
-
+	buffChan := make(chan int, 0)
 	// assigning the config to c to use for comparision
 	c := i.Config
 
 	// calls the function to run task concurrently
 	// starting up a go routine
 	if c.Commands.Concurrent {
-		go i.handleConcurrent()
+		go i.handleConcurrent(buffChan)
 	}
 
 	// calls handler function to run task synchronously
 	if c.Commands.Concurrent == false {
-		i.handleConcurrent()
+		i.handleConcurrent(buffChan)
 	}
 
-	wg.Wait()
 }

@@ -1,6 +1,6 @@
 {
   "commands": {
-    "concurrent": false,
+    "concurrent": true,
     "list": [
       {
         "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-admin",

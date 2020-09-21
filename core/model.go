@@ -1,5 +1,11 @@
 package core
 
+// enum for error types ...
+const (
+	Success int = iota
+	Failed
+)
+
 type CommandOut struct {
 	StdOutput []byte
 	StdError  []byte
