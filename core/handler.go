@@ -43,6 +43,7 @@ func (h HandlerObjects) Sync() {
 			// startup the run command
 			go startConcurrent(list.CMD, c.Directory, l)
 		}
+		wg.Wait()
 
 	}
 
@@ -59,7 +60,6 @@ func startConcurrent(command string, directory string, logger *zap.SugaredLogger
 	resChan := make(chan OperationStatus)
 
 	go RunCommand(command, directory, logger, resChan)
-
 	result := <-resChan
 
 	switch result.Status {
@@ -68,7 +68,7 @@ func startConcurrent(command string, directory string, logger *zap.SugaredLogger
 		logger.Errorf("[Failed] command %s \n", command)
 
 	case Success:
-		logger.Debugf("[success] command %s \n", command)
+		logger.Debugf("[success] command %s finished in [%s] \n", command, result.Duration)
 
 	case Error:
 		logger.Errorf("[Error] command %s encountered errors \n", command)
@@ -84,13 +84,13 @@ func startSynchronous(command string, directory string, logger *zap.SugaredLogge
 	switch result.Status {
 
 	case Failed:
-		logger.Debug("Operation Failed")
+		logger.Errorf("[Failed] command %s \n", command)
 
 	case Success:
-		logger.Debug("Operaton finished successfully")
+		logger.Debugf("[success] command %s finished in [%s] \n", command, result.Duration)
 
 	case Error:
-		logger.Debug("Operaton encountered Errors")
+		logger.Errorf("[Error] command %s encountered errors \n", command)
 
 	}
 

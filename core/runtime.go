@@ -2,6 +2,7 @@ package core
 
 import (
 	"runtime"
+	"time"
 
 	"github.com/Popoola-Opeyemi/meeseeks/util"
 	execute "github.com/alexellis/go-execute/pkg/v1"
@@ -24,8 +25,9 @@ type Instance struct {
 }
 
 type OperationStatus struct {
-	Status int
-	Result execute.ExecResult
+	Status   int
+	Result   execute.ExecResult
+	Duration time.Duration
 }
 
 // InitInstance ...
@@ -52,6 +54,7 @@ func InitApplication() (i Instance, e error) {
 
 // RunCommand runs command using the passed function parameters
 func RunCommand(command string, directory string, logger *zap.SugaredLogger, result chan OperationStatus) {
+	start := time.Now()
 
 	logger.Debugf("running command %s", command)
 
@@ -62,20 +65,22 @@ func RunCommand(command string, directory string, logger *zap.SugaredLogger, res
 
 	res, err := cmd.Execute()
 
+	end := time.Since(start)
+
 	if err != nil {
-		s := OperationStatus{Status: Error, Result: res}
+		s := OperationStatus{Status: Error, Result: res, Duration: end}
 		result <- s
 		return
 	}
 
 	if res.ExitCode != 0 {
-		s := OperationStatus{Status: Failed, Result: res}
+		s := OperationStatus{Status: Failed, Result: res, Duration: end}
 		result <- s
 		return
 	}
 
 	if res.ExitCode == 0 {
-		s := OperationStatus{Status: Success, Result: res}
+		s := OperationStatus{Status: Success, Result: res, Duration: end}
 		result <- s
 
 	}
@@ -84,8 +89,9 @@ func RunCommand(command string, directory string, logger *zap.SugaredLogger, res
 
 // RunCommand runs command using the passed function parameters
 func RunCommandSync(command string, directory string, logger *zap.SugaredLogger) (result OperationStatus) {
+	start := time.Now()
 
-	logger.Debugf("running command %s", command)
+	logger.Debugf("[running cmd]  %s \n", command)
 
 	cmd := execute.ExecTask{
 		Command: command,
@@ -93,22 +99,26 @@ func RunCommandSync(command string, directory string, logger *zap.SugaredLogger)
 	}
 
 	res, err := cmd.Execute()
+	end := time.Since(start)
 
 	if err != nil {
 		result.Status = Error
 		result.Result = res
+		result.Duration = end
 		return
 	}
 
 	if res.ExitCode != 0 {
 		result.Status = Failed
 		result.Result = res
+		result.Duration = end
 		return
 	}
 
 	if res.ExitCode == 0 {
 		result.Status = Success
 		result.Result = res
+		result.Duration = end
 		return
 	}
 
