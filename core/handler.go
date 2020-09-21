@@ -7,42 +7,33 @@ import (
 	"go.uber.org/zap"
 )
 
-func (i *Instance) handleConcurrent(status chan int) {
-	var wg sync.WaitGroup
+// handleConcurrent function loops loops through each command to determine
+// which inner go routine to be spawned
+func handleConcurrent(items JsonInner, wg *sync.WaitGroup, logger *zap.SugaredLogger) {
 
-	// getting logger the pointer
-	logger := i.Logger
-
-	cmdList := i.Config.Commands.List
-
-	// looping through each of the list and for selected commands
-	for idx, cmd := range cmdList {
-
-		wg.Add(idx)
-
-		// concurrent handler
-		if cmd.Concurrent {
-
-			for i, list := range cmd.List {
-				_ = i
-				go runCommand(list.CMD, cmd.Directory, logger)
-			}
-
+	if items.Concurrent {
+		for i, list := range items.List {
+			_ = i
+			wg.Add(1)
+			go runCommand(list.CMD, items.Directory, wg, logger)
 		}
-
-		if !cmd.Concurrent {
-			for i, list := range cmd.List {
-				_ = i
-				runCommand(list.CMD, cmd.Directory, logger)
-			}
-		}
-
 	}
+
+	if !items.Concurrent {
+		for i, list := range items.List {
+			_ = i
+			runCommand(list.CMD, items.Directory, wg, logger)
+		}
+	}
+
+	defer wg.Done()
+
 }
 
-func runCommand(command string, directory string, logger *zap.SugaredLogger) (int, execute.ExecResult, error) {
+// runCommand runs command using the passed function parameters
+func runCommand(command string, directory string, wg *sync.WaitGroup, logger *zap.SugaredLogger) {
 
-	logger.Debug("running command %s", command)
+	logger.Debugf("running command %s", command)
 
 	cmd := execute.ExecTask{
 		Command: command,
@@ -52,33 +43,64 @@ func runCommand(command string, directory string, logger *zap.SugaredLogger) (in
 	res, err := cmd.Execute()
 
 	if err != nil {
-		return Failed, res, err
-
+		logger.Debug("an error occured", err)
 	}
 
-	if res.ExitCode != 0 {
-		return Failed, res, nil
+	if res.ExitCode == 0 {
+		logger.Debugf("command %s is finished", command)
 	}
 
-	return Success, res, nil
+	defer wg.Done()
+
+	// if err != nil {
+	// 	return Failed, res, err
+
+	// }
+
+	// if res.ExitCode != 0 {
+	// 	return Failed, res, nil
+	// }
+
+	// return Success, res, nil
 }
 
-// Handler ...
+// StartHandler function responsible for starting appropriate ...
 func (i *Instance) StartHandler() {
 
-	buffChan := make(chan int, 0)
-	// assigning the config to c to use for comparision
-	c := i.Config
+	wg := new(sync.WaitGroup)
 
-	// calls the function to run task concurrently
-	// starting up a go routine
-	if c.Commands.Concurrent {
-		go i.handleConcurrent(buffChan)
+	// assigning the commands list
+	cmdList := i.Config.Commands.List
+
+	// assigning concurrent status
+	concurrent := i.Config.Commands.Concurrent
+
+	// assigning the logger
+	logger := i.Logger
+
+	// concurrent operations
+	if concurrent {
+
+		for idx, cmd := range cmdList {
+			_ = idx
+			wg.Add(1)
+			// calls the function to run task concurrently
+			go handleConcurrent(cmd, wg, logger)
+		}
+
+		wg.Wait()
+
 	}
 
-	// calls handler function to run task synchronously
-	if c.Commands.Concurrent == false {
-		i.handleConcurrent(buffChan)
-	}
+	// // synchronous operations
+	// if !concurrent {
+
+	// 	for idx, cmd := range cmdList {
+	// 		_ = idx
+
+	// 		// calls the function to run task synchronously
+	// 		handleConcurrent(cmd, logger)
+	// 	}
+	// }
 
 }
