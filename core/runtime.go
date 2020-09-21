@@ -45,9 +45,7 @@ func InitApplication() (i Instance, e error) {
 
 	i.OperatingSystem = runtime.GOOS
 
-	logger.Info("Starting Application")
-
-	logger.Info("Reading Config File ...")
+	logger.Info("Starting Application \n")
 
 	// checking to ensure file exists
 	fExist := FileExist(settingFN)
@@ -64,10 +62,12 @@ func InitApplication() (i Instance, e error) {
 		}
 	}
 
+	logger.Info("Reading Config File ... \n")
+
 	config, err := ReadConfig(settingFN)
 
 	if err != nil {
-		logger.Info("[Exiting !] cannot find Config file \n")
+		logger.Info("[Exiting !] cannot read Config file \n")
 		os.Exit(1)
 	}
 
@@ -81,7 +81,7 @@ func InitApplication() (i Instance, e error) {
 func RunCommand(command string, directory string, logger *zap.SugaredLogger, result chan OperationStatus) {
 	start := time.Now()
 
-	logger.Infof("running command %s", command)
+	logger.Infof("[running cmd] %s \n", command)
 
 	cmd := execute.ExecTask{
 		Command: command,

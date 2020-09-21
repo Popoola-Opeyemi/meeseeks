@@ -43,13 +43,14 @@ func (h HandlerObjects) Sync() {
 	// if operation is to be ran concurrently
 	if c.Concurrent {
 
+		wg.Add(len(c.List))
+
 		for _, list := range c.List {
 
 			// ensuring cmd is not empty
 			if list.CMD != "" {
 
 				// adds to waitgroup counter
-				wg.Add(1)
 
 				// startup the run command
 				go startConcurrent(list.CMD, c.Directory, l)
@@ -82,6 +83,8 @@ func startConcurrent(command string, directory string, logger *zap.SugaredLogger
 	// creating a channel
 	resChan := make(chan OperationStatus)
 
+	defer close(resChan)
+
 	// starting go routine to handle running command
 	go RunCommand(command, directory, logger, resChan)
 
@@ -95,7 +98,7 @@ func startConcurrent(command string, directory string, logger *zap.SugaredLogger
 		logger.Errorf("[Failed] command %s \n", command)
 
 	case Success:
-		logger.Debugf("[success] command %s finished in [%s] \n", command, result.Duration)
+		logger.Infof("[success] command %s finished in [%s] \n", command, result.Duration)
 
 	case Error:
 		logger.Errorf("[Error] command %s encountered errors \n", command)
@@ -115,7 +118,7 @@ func startSynchronous(command string, directory string, logger *zap.SugaredLogge
 		logger.Errorf("[Failed] command %s \n", command)
 
 	case Success:
-		logger.Debugf("[success] command %s finished in [%s] \n", command, result.Duration)
+		logger.Infof("[success] command %s finished in [%s] \n", command, result.Duration)
 
 	case Error:
 		logger.Errorf("[Error] command %s encountered errors \n", command)
@@ -141,10 +144,10 @@ func (i *Instance) StartHandler() {
 	// concurrent operations
 	if concurrent {
 
+		wg.Add(len(cmdList))
 		for _, cmd := range cmdList {
 
 			// increment wait group by 1
-			wg.Add(1)
 
 			h = HandlerObjects{Logger: logger, Config: cmd}
 

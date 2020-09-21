@@ -2,11 +2,13 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/Popoola-Opeyemi/meeseeks/core"
 )
 
 func main() {
+	start := time.Now()
 
 	instance, err := core.InitApplication()
 
@@ -17,6 +19,8 @@ func main() {
 
 	instance.StartHandler()
 
-	instance.Logger.Info("All Operation Finished")
+	end := time.Since(start)
+
+	instance.Logger.Infof("Operation Completed in [%s]", end)
 
 }

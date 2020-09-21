@@ -1,0 +1,22 @@
+{
+  "commands": {
+    "concurrent": true,
+    "list": [
+      {
+        "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-admin",
+        "concurrent": true,
+        "list": [ { "cmd": "npm run build -- --spa"},{"cmd":"ipconfig"}]
+      },
+      {
+        "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-student",
+        "concurrent": true,
+         "list": [{ "cmd": "npm run build -- --spa"}]
+      },
+      {
+        "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-website",
+        "concurrent": true,
+         "list": [{ "cmd": "npm run build"}]
+      }
+    ]
+  }
+}
