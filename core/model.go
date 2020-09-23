@@ -1,10 +1,14 @@
 package core
 
-import "go.uber.org/zap"
+import (
+	"context"
+
+	"go.uber.org/zap"
+)
 
 type Handler interface {
-	concurrent()
-	sync()
+	concurrent(ctx context.Context)
+	sync(ctx context.Context)
 }
 
 // enum for error types ...

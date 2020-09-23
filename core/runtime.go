@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"time"
@@ -45,6 +46,8 @@ func InitApplication() (i Instance, e error) {
 
 	i.OperatingSystem = runtime.GOOS
 
+	logger.Info(splashScreen())
+
 	logger.Info("Starting Application \n")
 
 	// checking to ensure file exists
@@ -52,7 +55,7 @@ func InitApplication() (i Instance, e error) {
 
 	// if file does not exist attempt to create it
 	if !fExist {
-		logger.Infof("Cannot Find %s , creating %s \n", settingFN, settingFN)
+		fmt.Print("Cannot Find %s , creating %s \n", settingFN, settingFN)
 
 		err := CreateConfig(settingFN)
 
@@ -152,4 +155,18 @@ func RunCommandSync(command string, directory string, logger *zap.SugaredLogger)
 
 	return
 
+}
+
+func splashScreen() string {
+	splash := `
+___________________________________________
+___________________________________________
+|  \/  | ___  ___  ___  ___  ___| | _____ 
+| |\/| |/ _ \/ _ \/ __|/ _ \/ _ \ |/ / __|
+| |  | |  __/  __/\__ \  __/  __/   <\__ \
+|_|  |_|\___|\___||___/\___|\___|_|\_\___/
+___________________________________________
+___________________________________________                                   
+`
+	return splash
 }
