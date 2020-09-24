@@ -84,7 +84,7 @@ func InitApplication() (i Instance, e error) {
 func RunCommand(command string, directory string, logger *zap.SugaredLogger, result chan OperationStatus) {
 	start := time.Now()
 
-	logger.Infof("[running cmd] %s \n", command)
+	logger.Infof("+c [running cmd] %s \n", command)
 
 	cmd := execute.ExecTask{
 		Command: command,
@@ -96,6 +96,7 @@ func RunCommand(command string, directory string, logger *zap.SugaredLogger, res
 	end := time.Since(start)
 
 	if err != nil {
+		res.Stderr = err.Error()
 		// initializing and populating OperationStatus struct
 		s := OperationStatus{Status: Error, Result: res, Duration: end}
 		result <- s
@@ -120,7 +121,7 @@ func RunCommandSync(command string, directory string, logger *zap.SugaredLogger)
 	// get current time to track execution of task
 	start := time.Now()
 
-	logger.Infof("[running cmd]  %s \n", command)
+	logger.Infof("+s [running cmd]  %s \n", command)
 
 	cmd := execute.ExecTask{
 		Command: command,
@@ -135,25 +136,23 @@ func RunCommandSync(command string, directory string, logger *zap.SugaredLogger)
 	if err != nil {
 		result.Status = Error
 		result.Result = res
-		result.Duration = end
-		return
-	}
 
+		result.Duration = end
+	}
 	if res.ExitCode != 0 {
 		result.Status = Failed
 		result.Result = res
 		result.Duration = end
-		return
 	}
 
 	if res.ExitCode == 0 {
 		result.Status = Success
 		result.Result = res
 		result.Duration = end
-		return
 	}
 
-	return
+	start = time.Now()
+	return result
 
 }
 

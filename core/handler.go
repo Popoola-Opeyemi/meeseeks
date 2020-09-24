@@ -83,8 +83,6 @@ func startConcurrent(command string, directory string, logger *zap.SugaredLogger
 	// creating a channel
 	resChan := make(chan OperationStatus)
 
-	defer close(resChan)
-
 	// starting go routine to handle running command
 	go RunCommand(command, directory, logger, resChan)
 
@@ -101,7 +99,7 @@ func startConcurrent(command string, directory string, logger *zap.SugaredLogger
 		logger.Infof("[success] command %s finished in [%s] \n", command, result.Duration)
 
 	case Error:
-		logger.Errorf("[Error] command %s encountered errors \n", command)
+		logger.Errorf("[Error] command %s encountered errors %s \n", command, result.Result.Stderr)
 
 	}
 
@@ -109,7 +107,6 @@ func startConcurrent(command string, directory string, logger *zap.SugaredLogger
 
 // starts an asynchronous handler to run the command
 func startSynchronous(command string, directory string, logger *zap.SugaredLogger) {
-
 	result := RunCommandSync(command, directory, logger)
 
 	switch result.Status {

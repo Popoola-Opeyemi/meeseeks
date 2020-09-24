@@ -4,18 +4,28 @@
     "list": [
       {
         "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-admin",
-        "concurrent": true,
-        "list": [ { "cmd": "npm run build -- --spa"},{"cmd":"ipconfig"}]
+        "concurrent": false,
+        "list": [ { "cmd": "npm run build -- --spa"},{"cmd":"7z a dist.zip dist"}]
       },
       {
         "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-student",
-        "concurrent": true,
-         "list": [{ "cmd": "npm run build -- --spa"}]
+        "concurrent": false,
+         "list": [{ "cmd": "npm run build -- --spa"},{"cmd":"7z a dist.zip dist"}]
       },
       {
         "directory": "C:\\Users\\Popstar\\work\\Orb\\WMOU\\wmusis-website",
-        "concurrent": true,
-         "list": [{ "cmd": "npm run build"}]
+        "concurrent": false,
+         "list": [{ "cmd": "npm run build"},{"cmd":"7z a .nuxt.zip .nuxt"}]
+      },
+      {
+        "directory": "C:\\Users\\Popstar\\work\\Orb\\splash-abeokuta\\admin",
+        "concurrent": false,
+         "list": [{ "cmd": "npm run build -- --spa"} , {"cmd":"7z a dist.zip dist"}]
+      },
+      {
+        "directory": "C:\\Users\\Popstar\\work\\Orb\\splash-abeokuta\\www",
+        "concurrent": false,
+         "list": [{ "cmd": "npm run build"}, {"cmd":"7z a .nuxt.zip .nuxt"}]
       }
     ]
   }
